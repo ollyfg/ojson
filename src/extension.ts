@@ -23,21 +23,27 @@ export function activate(context: vscode.ExtensionContext) {
       });
       return;
     }
+    // First, try regular json parsing
     try {
-      // Replace all `key:`s with `"key":`
-      const keys = text.match(/\b.*?:/g);
-      if (keys) {
-        for (const key of keys) {
-          // Get rid of any other quotes
-          const cleanKey = key.replace(/['"`:]/g, "");
-          text = text.replace(key, `"${cleanKey}":`);
-        }
-      }
       input = JSON.parse(text);
     } catch (error) {
-      console.error("ojson.to_json.error", error);
-      vscode.window.showErrorMessage(`Could not parse JSON: ${error}`);
-      return;
+      // Try literal parsing
+      try {
+        // Replace all `key:`s with `"key":`
+        const keys = text.match(/\b.*?:/g);
+        if (keys) {
+          for (const key of keys) {
+            // Get rid of any other quotes
+            const cleanKey = key.replace(/['"`:]/g, "");
+            text = text.replace(key, `"${cleanKey}":`);
+          }
+        }
+        input = JSON.parse(text);
+      } catch (error) {
+        console.error("ojson.to_json.error", error);
+        vscode.window.showErrorMessage(`Could not parse JSON: ${error}`);
+        return;
+      }
     }
     if (selection) {
       output = stringify(input, { space: 2 });
